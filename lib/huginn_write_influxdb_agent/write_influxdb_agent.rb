@@ -61,7 +61,6 @@ module Agents
     def receive(incoming_events)
       incoming_events.each do |event|
         interpolate_with(event) do
-          log event if interpolated['debug'] == 'true'
           write_to_db
         end
       end
@@ -69,7 +68,22 @@ module Agents
     
     def write_to_db
       url = URI.parse("#{interpolated['url']}/write?db=#{interpolated['db']}")
-      log url
+      log url if interpolated['debug'] == 'true'
+      
+      interpolated['payload'].each do |msg|
+        log msg if interpolated['debug'] == 'true'
+        
+#        req = Net::HTTP::Post.new(url)
+#        req.body = msg
+        
+#        response = Net::HTTP::start(url.hostname, url.port, { use_ssl: url.scheme == 'https' }) do |h|
+#          h.request(req)
+#        end
+        
+#        if response.kind_of? Net::HTTPSuccess
+#          log "response status code: #{response.code}" if interpolated['debug'] == 'true'
+#        end
+      end
     end
   end
 end
