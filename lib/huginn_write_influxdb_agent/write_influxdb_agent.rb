@@ -73,16 +73,16 @@ module Agents
       interpolated['payload'].each do |msg|
         log msg if interpolated['debug'] == 'true'
         
-#        req = Net::HTTP::Post.new(url)
-#        req.body = msg
+        req = Net::HTTP::Post.new(url)
+        req.body = msg
         
-#        response = Net::HTTP::start(url.hostname, url.port, { use_ssl: url.scheme == 'https' }) do |h|
-#          h.request(req)
-#        end
+        response = Net::HTTP::start(url.hostname, url.port, { use_ssl: url.scheme == 'https' }) do |h|
+          h.request(req)
+        end
         
-#        if response.kind_of? Net::HTTPSuccess
-#          log "response status code: #{response.code}" if interpolated['debug'] == 'true'
-#        end
+        if response.kind_of? Net::HTTPSuccess
+          log "response status code: #{response.code}" if interpolated['debug'] == 'true'
+        end
       end
     end
   end
