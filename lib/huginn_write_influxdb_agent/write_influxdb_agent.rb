@@ -32,6 +32,18 @@ module Agents
       errors.add(:base, "db is required") unless options['db'].present?
 
       errors.add(:base, "payload is required") unless options['payload'].present?
+      case payload = options['payload']
+      when nil
+      when Array
+        payload.all? { |item|
+          String === item
+        } or errors.add(:base, 'payload may only contain strings')
+        if payload.empty?
+          errors.add(:base, 'payload must not be empty')
+        end
+      else
+        errors.add(:base, 'payload must be an array')
+      end
 
       unless options['expected_receive_period_in_days'].present? && options['expected_receive_period_in_days'].to_i > 0
         errors.add(:base, "Please provide 'expected_receive_period_in_days' to indicate how many days can pass without an update before this Agent is considered to not be working")
@@ -46,10 +58,18 @@ module Agents
       received_event_without_error?
     end
 
-#    def check
-#    end
-
-#    def receive(incoming_events)
-#    end
+    def receive(incoming_events)
+      incoming_events.each do |event|
+        interpolate_with(event) do
+          log event if interpolated['debug'] == 'true'
+          write_to_db
+        end
+      end
+    end
+    
+    def write_to_db
+      url = URI.parse("#{interpolated['url']}/write?db=#{interpolated['db']}")
+      log url
+    end
   end
 end
