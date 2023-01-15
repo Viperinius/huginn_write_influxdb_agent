@@ -1,23 +1,49 @@
 module Agents
   class WriteInfluxdbAgent < Agent
-    default_schedule '12h'
+    no_bulk_receive!
+    cannot_create_events!
+    default_schedule 'never'
 
     description <<-MD
-      Add a Agent description here
+      The Write InfluxDB Agent writes data from an event to an InfluxDB database.
+
+      Options:
+
+      * `url` - Connection URL to the DB (e.g. http://influx:8086)
+      * `db` - Database name
+      * `payload` - Array of write commands in line protocol format (see [the InfluxDB docs](https://docs.influxdata.com/influxdb/v1.8/write_protocols/line_protocol_reference/))
     MD
 
     def default_options
       {
+        'url' => '',
+        'db' => '',
+        'payload' => [],
+
+        'expected_receive_period_in_days' => '1',
+        'debug' => 'false'
       }
     end
 
     def validate_options
+      errors.add(:base, "url is required") unless options['url'].present?
+      errors.add(:base, "url must be http(s)") unless /^https?:\/\/.+/.match?(interpolated['url'])
+
+      errors.add(:base, "db is required") unless options['db'].present?
+
+      errors.add(:base, "payload is required") unless options['payload'].present?
+
+      unless options['expected_receive_period_in_days'].present? && options['expected_receive_period_in_days'].to_i > 0
+        errors.add(:base, "Please provide 'expected_receive_period_in_days' to indicate how many days can pass without an update before this Agent is considered to not be working")
+      end
+      
+      if options['debug'].present?
+        errors.add(:base, "debug contains invalid value") unless !boolify(options['debug']).nil?
+      end
     end
 
     def working?
-      # Implement me! Maybe one of these next two lines would be a good fit?
-      # checked_without_error?
-      # received_event_without_error?
+      received_event_without_error?
     end
 
 #    def check

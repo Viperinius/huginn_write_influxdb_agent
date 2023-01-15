@@ -8,10 +8,10 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Viperinius"]
   spec.email         = ["viperinius@gmx.de"]
 
-  spec.summary       = %q{Write a short summary, because Rubygems requires one.}
-  spec.description   = %q{Write a longer description or delete this line.}
+  spec.summary       = %q{huginn agent to write data to InfluxDB}
+  spec.description   = %q{}
 
-  spec.homepage      = "https://github.com/[my-github-username]/huginn_write_influxdb_agent"
+  spec.homepage      = "https://github.com/Viperinius/huginn_write_influxdb_agent"
 
   spec.license       = "MIT"
 
