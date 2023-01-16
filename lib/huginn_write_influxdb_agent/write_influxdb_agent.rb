@@ -58,20 +58,24 @@ module Agents
 
     def receive(incoming_events)
       incoming_events.each do |event|
-        log "raw event:" if interpolated['debug'] == 'true'
-        log event if interpolated['debug'] == 'true'
         interpolate_with(event) do
-          write_to_db
+          write_to_db(event)
         end
       end
     end
     
-    def write_to_db
+    def write_to_db(event)
       url = URI.parse("#{interpolated['url']}/write?db=#{interpolated['db']}")
       log url if interpolated['debug'] == 'true'
       
       if interpolated['influx_payload'].present?
-        interpolated['influx_payload'].each do |msg|
+        msgs = interpolated['influx_payload']
+      elsif event.payload['influx_payload'].present?
+        msgs = event.payload['influx_payload']
+      end
+      
+      if msgs
+        msgs.each do |msg|
           log msg if interpolated['debug'] == 'true'
 
           req = Net::HTTP::Post.new(url)
