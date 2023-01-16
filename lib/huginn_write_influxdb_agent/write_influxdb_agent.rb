@@ -32,14 +32,15 @@ module Agents
 
       errors.add(:base, "db is required") unless options['db'].present?
 
-      errors.add(:base, "influx_payload is required") unless options['influx_payload'].present?
-      case payload = options['influx_payload']
-      when Array
-        payload.all? { |item|
-          String === item
-        } or errors.add(:base, 'influx_payload may only contain strings')
-      else
-        errors.add(:base, 'influx_payload must be an array')
+      if options['influx_payload'].present?
+        case payload = options['influx_payload']
+        when Array
+          payload.all? { |item|
+            String === item
+          } or errors.add(:base, 'influx_payload may only contain strings')
+        else
+          errors.add(:base, 'influx_payload must be an array')
+        end
       end
 
       unless options['expected_receive_period_in_days'].present? && options['expected_receive_period_in_days'].to_i > 0
@@ -57,6 +58,8 @@ module Agents
 
     def receive(incoming_events)
       incoming_events.each do |event|
+        log "raw event:" if interpolated['debug'] == 'true'
+        log event if interpolated['debug'] == 'true'
         interpolate_with(event) do
           write_to_db
         end
@@ -67,20 +70,23 @@ module Agents
       url = URI.parse("#{interpolated['url']}/write?db=#{interpolated['db']}")
       log url if interpolated['debug'] == 'true'
       
-      interpolated['influx_payload'].each do |msg|
-        log msg if interpolated['debug'] == 'true'
-        
-        req = Net::HTTP::Post.new(url)
-        req.body = msg
-        
-        response = Net::HTTP::start(url.hostname, url.port, { use_ssl: url.scheme == 'https' }) do |h|
-          h.request(req)
-        end
-        
-        if response.kind_of? Net::HTTPSuccess
-          log "response status code: #{response.code}" if interpolated['debug'] == 'true'
+      if interpolated['influx_payload'].present?
+        interpolated['influx_payload'].each do |msg|
+          log msg if interpolated['debug'] == 'true'
+
+          req = Net::HTTP::Post.new(url)
+          req.body = msg
+
+          response = Net::HTTP::start(url.hostname, url.port, { use_ssl: url.scheme == 'https' }) do |h|
+            h.request(req)
+          end
+
+          if response.kind_of? Net::HTTPSuccess
+            log "response status code: #{response.code}" if interpolated['debug'] == 'true'
+          end
         end
       end
     end
+
   end
 end
