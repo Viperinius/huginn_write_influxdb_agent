@@ -11,14 +11,15 @@ module Agents
 
       * `url` - Connection URL to the DB (e.g. http://influx:8086)
       * `db` - Database name
-      * `payload` - Array of write commands in line protocol format (see [the InfluxDB docs](https://docs.influxdata.com/influxdb/v1.8/write_protocols/line_protocol_reference/))
+      * `influx_payload` - Array of write commands in line protocol format (see [the InfluxDB docs](https://docs.influxdata.com/influxdb/v1.8/write_protocols/line_protocol_reference/)).
+                           Alternatively to adding values here, you can pass them by having an `influx_payload` array in the incoming event.
     MD
 
     def default_options
       {
         'url' => '',
         'db' => '',
-        'payload' => [],
+        'influx_payload' => [],
 
         'expected_receive_period_in_days' => '1',
         'debug' => 'false'
@@ -31,18 +32,14 @@ module Agents
 
       errors.add(:base, "db is required") unless options['db'].present?
 
-      errors.add(:base, "payload is required") unless options['payload'].present?
-      case payload = options['payload']
-      when nil
+      errors.add(:base, "influx_payload is required") unless options['influx_payload'].present?
+      case payload = options['influx_payload']
       when Array
         payload.all? { |item|
           String === item
-        } or errors.add(:base, 'payload may only contain strings')
-        if payload.empty?
-          errors.add(:base, 'payload must not be empty')
-        end
+        } or errors.add(:base, 'influx_payload may only contain strings')
       else
-        errors.add(:base, 'payload must be an array')
+        errors.add(:base, 'influx_payload must be an array')
       end
 
       unless options['expected_receive_period_in_days'].present? && options['expected_receive_period_in_days'].to_i > 0
@@ -70,7 +67,7 @@ module Agents
       url = URI.parse("#{interpolated['url']}/write?db=#{interpolated['db']}")
       log url if interpolated['debug'] == 'true'
       
-      interpolated['payload'].each do |msg|
+      interpolated['influx_payload'].each do |msg|
         log msg if interpolated['debug'] == 'true'
         
         req = Net::HTTP::Post.new(url)
