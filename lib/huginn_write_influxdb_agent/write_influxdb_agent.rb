@@ -4,6 +4,8 @@ module Agents
     cannot_create_events!
     default_schedule 'never'
 
+    gem_dependency_check { defined?(HTTParty) }
+
     description <<-MD
       The Write InfluxDB Agent writes data from an event to an InfluxDB database.
 
@@ -78,16 +80,9 @@ module Agents
         msgs.each do |msg|
           log msg if interpolated['debug'] == 'true'
 
-          req = Net::HTTP::Post.new(url)
-          req.body = msg
+          response = HTTParty.post(url, body: msg)           
 
-          response = Net::HTTP::start(url.hostname, url.port, { use_ssl: url.scheme == 'https' }) do |h|
-            h.request(req)
-          end
-
-          if response.kind_of? Net::HTTPSuccess
-            log "response status code: #{response.code}" if interpolated['debug'] == 'true'
-          end
+          log "response status code: #{response.code}" if interpolated['debug'] == 'true'
         end
       end
     end
