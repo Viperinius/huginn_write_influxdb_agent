@@ -1,10 +1,10 @@
 module Agents
   class WriteInfluxdbAgent < Agent
+    include WebRequestConcern
+    
     no_bulk_receive!
     cannot_create_events!
     default_schedule 'never'
-
-    gem_dependency_check { defined?(HTTParty) }
 
     description <<-MD
       The Write InfluxDB Agent writes data from an event to an InfluxDB database.
@@ -79,10 +79,10 @@ module Agents
       if msgs
         msgs.each do |msg|
           log msg if interpolated['debug'] == 'true'
+    
+          response = faraday.run_request(:post, url, msg)
 
-          response = HTTParty.post(url, body: msg)           
-
-          log "response status code: #{response.code}" if interpolated['debug'] == 'true'
+          log "response status code: #{response.status}" if interpolated['debug'] == 'true'
         end
       end
     end
