@@ -80,7 +80,7 @@ module Agents
         msgs.each do |msg|
           log msg if interpolated['debug'] == 'true'
     
-          response = faraday.run_request(:post, url, msg)
+          response = faraday.run_request(:post, url, msg, nil)
 
           log "response status code: #{response.status}" if interpolated['debug'] == 'true'
         end
